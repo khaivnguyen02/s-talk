@@ -23,28 +23,30 @@ static char* remoteIP;
 void *SendThread(void *arg)
 {
     List* list = (List*)arg;
-       
-    char* MESSAGE;
+  
     //bind port and send to the remote port
-        struct sockaddr_in sinRemote;
-        memset(&sinRemote, 0, sizeof(sinRemote));
-        sinRemote.sin_family = AF_INET;                   // Connection may be from network
-       // sinRemote.sin_addr.s_addr = htonl(remoteIP);    // Host to Network long
-        sinRemote.sin_port = htons(remotePort);                 // Host to Network short
-        if (inet_pton(AF_INET, remoteIP, &sinRemote.sin_addr) <= 0) {
-            perror("Error converting IP address");
-        }  
-        // Create the socket for UDP
-        int socketDescriptor = socket(PF_INET, SOCK_DGRAM, 0);
-        // CHECK ERRORS
-        if (socketDescriptor == -1) {
-            perror("Error creating UDP socket");
-            exit(EXIT_FAILURE);
-        }
-   
+    struct sockaddr_in sinRemote;
+    memset(&sinRemote, 0, sizeof(sinRemote));
+    sinRemote.sin_family = AF_INET;                   // Connection may be from network
+    sinRemote.sin_port = htons(remotePort);                 // Host to Network short
 
-     while (1) {
-        // Lock the mutex before accessinRemoteg the list
+    //convert char string to IP address
+    if (inet_pton(AF_INET, remoteIP, &sinRemote.sin_addr) <= 0) {
+        perror("Error converting IP address");
+    }  
+
+    // Create the socket for UDP
+    int socketDescriptor = socket(PF_INET, SOCK_DGRAM, 0);
+    // CHECK ERRORS
+    if (socketDescriptor == -1) {
+        perror("Error creating UDP socket");
+        exit(EXIT_FAILURE);
+    }
+   
+    char *messageTx = NULL;
+    while (1) {
+        
+        // Lock the mutex before access the list
         pthread_mutex_lock(&s_syncOkToSendMutex);
         // Check if the list is empty
         while (list->count == 0 ) {
@@ -53,13 +55,11 @@ void *SendThread(void *arg)
         }
         
         // Get the message from the list
-        MESSAGE = List_trim(list);
+        
+        messageTx = List_trim(list);
         
         // Unlock the mutex
         pthread_mutex_unlock(&s_syncOkToSendMutex);
-
-        char messageTx[MSG_MAX_LEN];
-        sprintf(messageTx,"%s", MESSAGE);
         unsigned int sin_len = sizeof(sinRemote);
         int bytesSent = sendto(socketDescriptor,
                  messageTx, 
@@ -70,10 +70,10 @@ void *SendThread(void *arg)
         if (bytesSent == -1) {
             perror("Error sending message");
         }
-
+     
     }
     // Free the message memory
-    free((void*)MESSAGE);
+    free(messageTx);
 
     return NULL;
 }

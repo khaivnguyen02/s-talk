@@ -16,20 +16,26 @@ static List* list = NULL;
 
 void *readThread(void *arg) {
     List* list = (List*)arg;
- 
+    char messageTx[MSG_MAX_LEN];
     while(1) {
-        // Get the data (blocking)
-
-        char messageTx[MSG_MAX_LEN];
-        printf("Type something: ");
+        // Get the message
+        
+        printf("\nType something: ");
         scanf("%s", messageTx);
-        
-        List_append(list, messageTx);
-        Send_signalNextChar();
-        
-        
 
-    
+        // check if message is "!" then terminate the session
+        // if (strcmp(messageTx, "!\n")==0)
+        // {
+        //     printf("ehe");
+        //     break;
+        // }
+
+        //add message to the list
+        List_append(list, messageTx);
+
+        //signal send to send message
+        Send_signalNextChar();
+
     }
     return NULL;
 }

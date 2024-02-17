@@ -16,7 +16,9 @@ void *WriteThread(void *arg)
 {
     List* list = (List*)arg;
     char* MESSAGE;
-     while (1) {
+
+    while (1) {
+        
         // Lock the mutex before accessing the list
         pthread_mutex_lock(&s_syncOkToWriteMutex);
         
@@ -33,12 +35,12 @@ void *WriteThread(void *arg)
         pthread_mutex_unlock(&s_syncOkToWriteMutex);
 
         // Print the message character by character
-        printf("Message receive: ");
+        printf("\nMessage receive: ");
         for (const char* msg = MESSAGE; *msg != '\0'; msg++) {
             printf("%c", *msg);
             fflush(stdout);
         }
-
+       
     }
     // Free the message memory
     free((void*)MESSAGE);
