@@ -12,10 +12,10 @@ static pthread_mutex_t s_syncOkToWriteMutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t s_syncOkToWriteCondVar = PTHREAD_COND_INITIALIZER;
 static List* list;
 
-void *WriteThread(void *unused)
+void *WriteThread(void *arg)
 {
-       
-    const char* MESSAGE;
+    List* list = (List*)arg;
+    char* MESSAGE;
      while (1) {
         // Lock the mutex before accessing the list
         pthread_mutex_lock(&s_syncOkToWriteMutex);
@@ -33,6 +33,7 @@ void *WriteThread(void *unused)
         pthread_mutex_unlock(&s_syncOkToWriteMutex);
 
         // Print the message character by character
+        printf("Message receive: ");
         for (const char* msg = MESSAGE; *msg != '\0'; msg++) {
             printf("%c", *msg);
             fflush(stdout);
@@ -48,7 +49,7 @@ void *WriteThread(void *unused)
 void  Write_init(List* listS)
 {
     list = listS;
-    pthread_create(&threadWrite, NULL, WriteThread, NULL);
+    pthread_create(&threadWrite, NULL, WriteThread, (void*)listS);
 }
 
 void Write_signalNextChar()

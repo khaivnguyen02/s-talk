@@ -13,12 +13,12 @@
 static pthread_t threadPID;
 //static int socketDescriptor;
 static int myPort;
-static List* list;
+static List* list = NULL;
 
 
-void* receiveThread(void* unused)
+void* receiveThread(void *arg)
 {
-
+    List* list = (List*)arg;
    // Address
     struct sockaddr_in sin;
     memset(&sin, 0, sizeof(sin));
@@ -42,16 +42,16 @@ void* receiveThread(void* unused)
         // Will change sin (the address) to be the address of the client
         // Note: sin passes information in and out of call!
         struct sockaddr_in sinRemote;
+        
         unsigned int sin_len = sizeof(sinRemote);
         char messageRx[MSG_MAX_LEN];
+        
         int bytesRx = recvfrom(socketDescriptor,
             messageRx, MSG_MAX_LEN, 0,
             (struct sockaddr *) &sinRemote, &sin_len);
-
         // Make it null terminated (so string functions work):
         int terminateIdx = (bytesRx < MSG_MAX_LEN) ? bytesRx : MSG_MAX_LEN - 1;
-        messageRx[terminateIdx] = 0;
-               
+        messageRx[terminateIdx] = '\0';
         List_append(list, messageRx);
         Write_signalNextChar();
 
@@ -74,7 +74,7 @@ void Receiver_init(List* listR, char* myPortR)
         &threadPID,         // PID (by pointer)
         NULL,               // Attributes
         receiveThread,      // Function
-        NULL);              // Arguments
+        (void*)listR);              // Arguments
 }
 
 
