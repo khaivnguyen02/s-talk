@@ -4,30 +4,31 @@
 #include <pthread.h>
 #include "write.h"
 #include "list.h"
+#include <unistd.h>
 
 pthread_t threadWrite;
 
-
 static pthread_mutex_t s_syncOkToWriteMutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t s_syncOkToWriteCondVar = PTHREAD_COND_INITIALIZER;
-static List* list;
+static List *list;
 
 void *WriteThread(void *arg)
 {
-    List* list = (List*)arg;
-    char* MESSAGE;
+    List *list = (List *)arg;
+    char *MESSAGE;
 
-    while (1) {
-        
+    while (1)
+    {
         // Lock the mutex before accessing the list
         pthread_mutex_lock(&s_syncOkToWriteMutex);
-        
+
         // Check if the list is empty
-        while (list->count == 0 ) {
+        while (list->count == 0)
+        {
             // Wait until there are elements in the list
             pthread_cond_wait(&s_syncOkToWriteCondVar, &s_syncOkToWriteMutex);
         }
-        
+
         // Get the message from the list
         MESSAGE = List_trim(list);
 
@@ -36,22 +37,23 @@ void *WriteThread(void *arg)
 
         // Print the message character by character
         printf("\nMessage receive: ");
-        for (const char* msg = MESSAGE; *msg != '\0'; msg++) {
+        for (const char *msg = MESSAGE; *msg != '\0'; msg++)
+        {
             printf("%c", *msg);
+            sleep(1);
             fflush(stdout);
         }
-       
     }
     // Free the message memory
-    free((void*)MESSAGE);
+    free((void *)MESSAGE);
 
     return NULL;
 }
 
-void  Write_init(List* listS)
+void Write_init(List *listS)
 {
     list = listS;
-    pthread_create(&threadWrite, NULL, WriteThread, (void*)listS);
+    pthread_create(&threadWrite, NULL, WriteThread, (void *)listS);
 }
 
 void Write_signalNextChar()
