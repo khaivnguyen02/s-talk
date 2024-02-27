@@ -139,8 +139,6 @@ void Receiver_cancel()
 
 void Receiver_shutdown(void)
 {
-    freeaddrinfo(servinfo);
-
     close(sockfd);
 
     pthread_join(receiverThread, NULL);
